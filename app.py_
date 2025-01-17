@@ -1,10 +1,9 @@
 
 import pandas as pd
 import streamlit as st
-import re
 
 # タイトル
-st.title("韻文検索ツール（高速版）")
+st.title("韻文検索ツール（開発中）")
 
 # CSVファイルのパス
 CSV_FILE = "data.csv"
@@ -33,18 +32,6 @@ def search_generator(file_path, keywords, search_mode):
                 if any(keyword.lower() in vers_content for keyword in keywords):
                     yield columns
 
-# 大文字小文字を区別しないハイライト関数
-def highlight_keywords(text, keywords):
-    def highlight(match):
-        return f'<span style="color: black; background-color: yellow; font-weight: bold;">{match.group(0)}</span>'
-
-    for keyword in keywords:
-        # re.IGNORECASE を指定して大文字小文字を区別せずに検索
-        text = re.sub(
-            keyword, highlight, text, flags=re.IGNORECASE
-        )
-    return text
-
 # キーワード入力
 keyword_input = st.text_input("検索キーワードを入力してください（スペース区切りで複数入力可能）")
 search_mode = st.radio("検索モードを選択してください", options=["AND", "OR"], horizontal=True)
@@ -60,41 +47,20 @@ if keyword_input:
             data = results[1:]
             df = pd.DataFrame(data, columns=header)  # データフレーム作成
 
-            # VERS列にハイライトを適用
-            vers_index = header.index("VERS")
-            df["VERS"] = df["VERS"].apply(
-                lambda x: highlight_keywords(x, keywords)
-            )
-
-            # 列幅を調整するCSS
+            # 表示サイズを広げる設定
             st.markdown(
                 """
                 <style>
-                table {
+                .dataframe table {
                     width: 100%;
-                }
-                th, td {
-                    padding: 8px 12px;
-                    text-align: left;
-                }
-                th:first-child, td:first-child {
-                    width: 5%;
-                }
-                th:nth-child(2), td:nth-child(2) {
-                    width: 60%;
-                }
-                th:nth-child(3), td:nth-child(3) {
-                    width: 20%;
                 }
                 </style>
                 """,
                 unsafe_allow_html=True,
             )
 
-            # データフレームを表示（HTMLでハイライトを反映）
-            st.write(
-                df.to_html(escape=False, index=False), unsafe_allow_html=True
-            )
+            # データフレームを表示
+            st.dataframe(df, use_container_width=True)  # 表を全幅で表示
         else:
             st.warning("該当する韻文が見つかりませんでした。")
     except ValueError as e:
